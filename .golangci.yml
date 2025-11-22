@@ -1,0 +1,44 @@
+version: "2"
+run:
+  tests: true
+linters:
+  settings:
+    revive:
+      severity: warning
+      rules:
+        - name: unused-parameter
+          severity: warning
+        - name: indent-error-flow
+        - name: error-return
+        - name: blank-imports
+        - name: context-as-argument
+        - name: empty-lines
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - path: (.+)\.go$
+        text: should have comment
+    paths:
+      - vendor
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - vendor
+      - third_party$
+      - builtin$
+      - examples$

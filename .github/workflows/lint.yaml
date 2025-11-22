@@ -1,0 +1,30 @@
+name: Lint (golangci-lint)
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - '**/feature-*'
+      - '**/bug-*'
+
+jobs:
+  golangci-lint:
+    name: Run golangci-lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.4"
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.6.0
+      - name: Run linter
+        run: golangci-lint run ./...
