@@ -1,0 +1,122 @@
+name: Go Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        type: choice
+        description: "Select the release type"
+        options:
+          - patch
+          - minor
+          - major
+        required: true
+
+jobs:
+  release:
+    name: Create Git Tag & Release
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      # ----------------------------------------
+      # CHECKOUT
+      # ----------------------------------------
+      - name: Checkout source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # required to access all tags
+
+      # ----------------------------------------
+      # GET CURRENT VERSION
+      # ----------------------------------------
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          # Get latest tag or default to v0.0.0
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "current_tag=$tag" >> $GITHUB_OUTPUT
+
+      # ----------------------------------------
+      # CALCULATE NEXT VERSION
+      # ----------------------------------------
+      - name: Calculate next version
+        id: bump
+        run: |
+          type="${{ github.event.inputs.release_type }}"
+          current="${{ steps.get_tag.outputs.current_tag }}"
+
+          # Strip leading 'v'
+          version="${current#v}"
+
+          # Split version into components
+          major=$(echo $version | cut -d. -f1)
+          minor=$(echo $version | cut -d. -f2)
+          patch=$(echo $version | cut -d. -f3)
+
+          case $type in
+            patch)
+              patch=$((patch+1))
+              ;;
+            minor)
+              minor=$((minor+1))
+              patch=0
+              ;;
+            major)
+              major=$((major+1))
+              minor=0
+              patch=0
+              ;;
+          esac
+
+          new="v${major}.${minor}.${patch}"
+
+          echo "release_tag=$new" >> $GITHUB_OUTPUT
+          echo "Next version: $new"
+
+      # ----------------------------------------
+      # CREATE TAG LOCALLY
+      # ----------------------------------------
+      - name: Create git tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag ${{ steps.bump.outputs.release_tag }}
+
+      # ----------------------------------------
+      # PUSH TAG
+      # ----------------------------------------
+      - name: Push tag
+        run: |
+          git push origin ${{ steps.bump.outputs.release_tag }}
+
+      # ----------------------------------------
+      # SETUP GO
+      # ----------------------------------------
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.4"
+
+      # ----------------------------------------
+      # BUILD (optional)
+      # ----------------------------------------
+      - name: Build binary
+        run: |
+          mkdir -p dist
+          go build -o dist/app .
+
+      # ----------------------------------------
+      # CREATE RELEASE
+      # ----------------------------------------
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.release_tag }}
+          name: Release ${{ steps.bump.outputs.release_tag }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
