@@ -11,6 +11,8 @@ on:
           - minor
           - major
         required: true
+permissions:
+  contents: write
 
 jobs:
   release:
