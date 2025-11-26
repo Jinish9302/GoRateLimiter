@@ -55,7 +55,8 @@ func (limiter *FixedWindowRateLimiter) unsafeResetIfWindowExpired() error {
 func (limiter *FixedWindowRateLimiter) ResetIfWindowExpired() error {
 	limiter.mux.Lock()
 	defer limiter.mux.Unlock()
-	return limiter.unsafeResetIfWindowExpired()
+	err := limiter.unsafeResetIfWindowExpired()
+	return err
 }
 
 func (limiter *FixedWindowRateLimiter) Allow() (bool, error) {
@@ -73,7 +74,9 @@ func (limiter *FixedWindowRateLimiter) Wait(ctx context.Context) error {
 	if allowed, _ := limiter.Allow(); allowed {
 		return nil
 	}
+	limiter.mux.RLock()
 	timeToWait := time.Until(limiter.currentWindowStart.Add(limiter.windowDuration))
+	limiter.mux.RUnlock()
 	timer := time.NewTimer(timeToWait)
 	defer timer.Stop()
 	select {
@@ -88,8 +91,8 @@ func (limiter *FixedWindowRateLimiter) Wait(ctx context.Context) error {
 }
 
 func (limiter *FixedWindowRateLimiter) Remaining() (int, time.Duration, error) {
-	limiter.mux.Lock()
-	defer limiter.mux.Unlock()
+	limiter.mux.RLock()
+	defer limiter.mux.RUnlock()
 	err := limiter.unsafeResetIfWindowExpired()
 	if err != nil {
 		return 0, 0, err
