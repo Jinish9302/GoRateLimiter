@@ -40,7 +40,8 @@ func TestFixedWindowRateLimiter_GetFixedWindowRateLimiterConfig(t *testing.T) {
 			Limit:          test.limit,
 			WindowDuration: test.windowDuration,
 		})
-		if limiter.limit != test.limit || limiter.windowDuration != test.windowDuration {
+		config := limiter.GetFixedWindowRateLimiterConfig()
+		if config.Limit != test.limit || config.WindowDuration != test.windowDuration {
 			t.Errorf(
 				"Test Case: %v || Expected:%v, %v || Got: %v, %v",
 				i,

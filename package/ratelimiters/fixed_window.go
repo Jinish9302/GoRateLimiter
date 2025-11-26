@@ -28,7 +28,7 @@ func NewFixedWindowRateLimiter(config FixedWindowRateLimiterConfig) *FixedWindow
 	}
 }
 
-func (limiter *FixedWindowRateLimiter) GetFixedWindowRateLimiterConfig(config FixedWindowRateLimiterConfig) FixedWindowRateLimiterConfig {
+func (limiter *FixedWindowRateLimiter) GetFixedWindowRateLimiterConfig() FixedWindowRateLimiterConfig {
 	limiter.mux.RLock()
 	defer limiter.mux.RUnlock()
 	return FixedWindowRateLimiterConfig{Limit: limiter.limit, WindowDuration: limiter.windowDuration}
