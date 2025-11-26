@@ -60,7 +60,7 @@ func TestFixedWindowRateLimiter_Reset(t *testing.T) {
 	})
 	initialTime := limiter.currentWindowStart
 	allowed, allowErr := limiter.Allow()
-	if (allowErr != nil || !allowed || limiter.currentWindowStart != initialTime) {
+	if allowErr != nil || !allowed || limiter.currentWindowStart != initialTime {
 		t.Errorf(
 			"Test Case: 0 || Expected: allowed->true,allowErr->nil,limiter.currentWindowStart->%v || Got: allowed->%v,allowErr->%v,limiter.currentWindowStart->%v",
 			initialTime,
@@ -70,7 +70,7 @@ func TestFixedWindowRateLimiter_Reset(t *testing.T) {
 		)
 	}
 	err := limiter.Reset()
-	if (err != nil || limiter.requestCount != 0 || limiter.currentWindowStart!= initialTime) {
+	if err != nil || limiter.requestCount != 0 || limiter.currentWindowStart != initialTime {
 		t.Errorf(
 			"Test Case: 1 || Expected: err->nil,limiter.requestCount->0,limiter.currentWindowStart->(not %v) || Got: err->%v,limiter.requestCount->%v, limiter.currentWindowStart->%v",
 			initialTime,
@@ -127,9 +127,9 @@ func TestFixedWindowRateLimiter_Wait(t *testing.T) {
 		WindowDuration: 100 * time.Millisecond,
 	})
 	testSuitse := []struct {
-		err error
+		err        error
 		interupted bool
-	} {
+	}{
 		{nil, false},
 		{nil, false},
 		{context.Canceled, true},
